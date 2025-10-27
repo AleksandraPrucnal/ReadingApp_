@@ -39,12 +39,12 @@ class MatchAnswerOut(BaseModel):
 async def check_match_answer(
     body: MatchAnswerIn,
     service: IExerciseService = Depends(Provide[Container.exercise_service]),
-    user: CurrentUser = Depends(get_current_user),   # <--- ważne
+    user: CurrentUser = Depends(get_current_user),  
 ) -> MatchAnswerOut:
     ex_id, ok = await service.check_answer_match(
         id_exercise=body.id_exercise,
         selected_index=body.selected_index,
-        user_id=user.id_user,                        # <--- zapis progress
+        user_id=user.id_user,
     )
     return MatchAnswerOut(id_exercise=ex_id, is_correct=ok)
 
@@ -66,13 +66,13 @@ class QuestionAnswerOut(BaseModel):
 async def check_question_answer(
     body: QuestionAnswerIn,
     service: IExerciseService = Depends(Provide[Container.exercise_service]),
-    user: CurrentUser = Depends(get_current_user),   # <--- ważne
+    user: CurrentUser = Depends(get_current_user),
 ) -> QuestionAnswerOut:
     ex_id, q_id, ok = await service.check_answer_question_single(
         id_exercise=body.id_exercise,
         id_question=body.id_question,
         selected_index=body.selected_index,
-        user_id=user.id_user,                        # <--- zapis progress
+        user_id=user.id_user,
     )
     return QuestionAnswerOut(id_exercise=ex_id, id_question=q_id, is_correct=ok)
 
