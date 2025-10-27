@@ -41,20 +41,9 @@ async def authenticate_user(
     user: UserIn,
     service: IUserService = Depends(Provide[Container.user_service]),
 ) -> dict:
-    """A router coroutine for authenticating users.
-
-    Args:
-        user (UserIn): The user input data.
-        service (IUserService, optional): The injected user service.
-
-    Returns:
-        dict: The token DTO details.
-    """
-
+    """A router coroutine for authenticating users."""
     if token_details := await service.authenticate_user(user):
-        print("user confirmed")
-        return token_details.model_dump()
-
+        return token_details
     raise HTTPException(
         status_code=401,
         detail="Provided incorrect credentials",

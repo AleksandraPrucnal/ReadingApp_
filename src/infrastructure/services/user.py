@@ -30,7 +30,11 @@ class UserService(IUserService):
                     user_data.id_user,
                     user_data.role.value if hasattr(user_data.role, "value") else user_data.role
                 )
-                return TokenDTO(token_type="Bearer", **token_details)
+                return TokenDTO(
+                    access_token=token_details["access_token"],
+                    token_type="Bearer",
+                    expires=token_details["expires"]
+                )
             return None
 
         return None

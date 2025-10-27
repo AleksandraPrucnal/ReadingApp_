@@ -39,7 +39,7 @@ class MatchAnswerOut(BaseModel):
 async def check_match_answer(
     body: MatchAnswerIn,
     service: IExerciseService = Depends(Provide[Container.exercise_service]),
-    user: CurrentUser = Depends(get_current_user),  
+    user: CurrentUser = Depends(get_current_user),
 ) -> MatchAnswerOut:
     ex_id, ok = await service.check_answer_match(
         id_exercise=body.id_exercise,

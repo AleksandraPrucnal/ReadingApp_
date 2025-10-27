@@ -14,7 +14,7 @@ def generate_user_token(user_uuid: UUID4, role: str) -> dict:
     expire = datetime.now(timezone.utc) + timedelta(minutes=EXPIRATION_MINUTES)
     jwt_data = {
         "sub": str(user_uuid),
-        "role": role,               # <--- rola użytkownika
+        "role": role,
         "exp": expire,
         "type": "access"
     }
