@@ -10,6 +10,7 @@ from datetime import date, time, datetime
 from src.api.routers.exercise import router as exercise_router
 from src.api.routers.user import router as user_router
 from src.api.routers.topic import router as topic_router
+from src.api.routers.progress import router as progress_router
 
 from src.container import Container
 from src.db import database, init_db
@@ -31,6 +32,7 @@ container.wire(modules=[
     "src.api.routers.exercise",
     "src.api.routers.user",
     "src.api.routers.topic",
+    "src.api.routers.progress",
 ])
 
 
@@ -70,6 +72,7 @@ async def lifespan(_: FastAPI) -> AsyncGenerator:
 app = FastAPI(lifespan=lifespan)
 app.include_router(exercise_router, prefix="/exercise")
 app.include_router(user_router, prefix="/user")
+app.include_router(progress_router, prefix="/progress")
 app.include_router(topic_router, prefix="/topic")
 
 
