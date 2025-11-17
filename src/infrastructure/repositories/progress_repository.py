@@ -11,7 +11,7 @@ class ProgressRepository(IProgressRepository):
             progress_table.insert()
             .values(
                 user_id=data.user_id,
-                id_exercise=data.id_exercise,
+                exercise_id=data.exercise_id,
                 rate=data.rate,
                 completed_at=data.completed_at or datetime.utcnow(),
             )
