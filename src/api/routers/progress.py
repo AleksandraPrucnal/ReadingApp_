@@ -10,7 +10,7 @@ router = APIRouter(prefix="/progress", tags=["progress"])
 
 class ProgressOut(BaseModel):
     id_event: int
-    id_exercise: int
+    exercise_id: int
     rate: int
     completed_at: str
 
@@ -19,7 +19,7 @@ async def my_progress(user: CurrentUser = Depends(get_current_user)):
     rows = await database.fetch_all(
         select(
             progress_table.c.id_event,
-            progress_table.c.id_exercise,
+            progress_table.c.exercise_id,
             progress_table.c.rate,
             progress_table.c.completed_at,
         ).where(progress_table.c.user_id == user.id_user)
