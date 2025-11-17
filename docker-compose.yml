@@ -17,6 +17,9 @@ services:
       - DB_PASSWORD=pass
       - DATABASE_URL=postgresql+asyncpg://postgres:pass@db:5432/app
       - SECRET_KEY=TWOJ_SUPER_TAJNY_KLUCZ_WYGENERUJ_NOWY
+      - ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=30
+
     depends_on:
       - db
     networks:

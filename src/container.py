@@ -1,5 +1,5 @@
 from dependency_injector.containers import DeclarativeContainer
-from dependency_injector.providers import Factory, Singleton, Resource
+from dependency_injector.providers import Factory, Singleton
 
 # Repozytoria
 from src.infrastructure.repositories.exercise_repository import ExerciseRepository
@@ -14,13 +14,8 @@ from src.infrastructure.services.user import UserService
 from src.infrastructure.services.progress import ProgressService
 
 
-# Importujemy sesję bazy danych (jeśli Twoje repozytoria jej używają w __init__,
-# ale w naszym przypadku używamy globalnego obiektu 'database' z src.db,
-# więc repozytoria nie potrzebują wstrzykiwania sesji w kontenerze).
-
 class Container(DeclarativeContainer):
     # --- REPOZYTORIA ---
-    # Tworzymy je jako Singletony (jedna instancja na całą aplikację)
     exercise_repository = Singleton(ExerciseRepository)
     topic_repository = Singleton(TopicRepository)
     user_repository = Singleton(UserRepository)
@@ -29,7 +24,6 @@ class Container(DeclarativeContainer):
     # --- SERWISY ---
 
     # ExerciseService
-    # Zakładam, że w __init__ masz argumenty: repository i progress_repo
     exercise_service = Factory(
         ExerciseService,
         repository=exercise_repository,
@@ -37,22 +31,18 @@ class Container(DeclarativeContainer):
     )
 
     # UserService
-    # POPRAWKA: Zmieniono 'repository' na 'user_repo', aby pasowało do __init__ w UserService
     user_service = Factory(
         UserService,
-        user_repo=user_repository,
+        user_repo=user_repository,  # Upewnij się, że ta nazwa pasuje do __init__ w UserService
     )
 
     # TopicService
-    # Zakładam, że w __init__ masz argument: repository
     topic_service = Factory(
         TopicService,
         repository=topic_repository,
     )
 
     # ProgressService
-    # (Dodałem to, bo zaimportowałeś klasę, ale nie zdefiniowałeś fabryki w swoim kodzie)
-    # Jeśli masz ProgressService, prawdopodobnie wygląda tak:
     progress_service = Factory(
         ProgressService,
         repository=progress_repository
