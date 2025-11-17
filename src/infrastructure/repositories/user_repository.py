@@ -1,56 +1,80 @@
-from typing import Any
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from sqlalchemy.orm import noload
 from uuid import UUID
-from src.infrastructure.utils.password import hash_password
-from src.core.domain.user import UserIn
-from src.core.repositories.iuser_repository import IUserRepository
-from src.db import database, user_table
-from sqlalchemy import insert
-import asyncpg
+from src.db import user_table
+from src.core.domain.user import User
+from src.core.security import hash_password
+
+from src.db import database  # <-- Importuje obiekt 'database'
 
 
-class UserRepository(IUserRepository):
 
-    async def register_user(self, user: UserIn) -> Any | None:
-        hashed = hash_password(user.password)
-        payload = user.model_dump(mode="json")
-        payload["password"] = hashed
 
-        stmt = (
-            insert(user_table)
-            .values(**payload)
-            .returning(user_table.c.id_user)
-        )
+class UserRepository:
+    # Nie ma __init__ z sesją, bo używamy globalnego 'database'
 
-        async with database.transaction():
-            existing = await database.fetch_one(
-                user_table.select().where(user_table.c.email == user.email)
-            )
-            if existing:
-                return None
+    async def get_user_by_id(self, user_id: UUID) -> User | None:
+        """
+        Pobiera użytkownika po jego UUID.
+        Używane przez /auth/me.
+        """
+        # Ta funkcja była prawdopodobnie błędna
+        query = user_table.select().where(user_table.c.id_user == user_id)
+        row = await database.fetch_one(query)
+        return User(**row) if row else None
 
-            try:
-                new_user_uuid = await database.execute(stmt)
-            except asyncpg.UniqueViolationError:
-                return None
+    async def get_user_by_email(self, email: str) -> User | None:
+        """
+        Pobiera użytkownika po jego adresie email.
+        Używane przez /auth/authenticate.
+        """
+        # Ta funkcja była poprawna
+        query = user_table.select().where(user_table.c.email == email)
+        row = await database.fetch_one(query)
+        return User(**row) if row else None
 
-            return await database.fetch_one(
-                user_table.select().where(user_table.c.id_user == new_user_uuid)
-            )
+    async def get_user_by_username(self, username: str) -> User | None:
+        """
+        Pobiera użytkownika po jego nazwie.
+        Używane przy rejestracji do sprawdzania duplikatów.
+        """
+        query = user_table.select().where(user_table.c.username == username)
+        row = await database.fetch_one(query)
+        return User(**row) if row else None
 
-    async def get_by_uuid(self, uuid: UUID) -> Any | None:
+    async def create_user(self, user_data: dict) -> User:
+        """
+        Tworzy nowego użytkownika.
+        Używane przez /auth/register.
+        """
+        query = user_table.insert().values(**user_data).returning(user_table)
+        created_user_row = await database.fetch_one(query)
 
-        query = user_table \
-            .select() \
-            .where(user_table.c.id_user == uuid)
-        user = await database.fetch_one(query)
+        if created_user_row is None:
+            raise Exception("Nie udało się utworzyć użytkownika")  # Zabezpieczenie
 
-        return user
+        return User(**created_user_row)
 
-    async def get_by_email(self, email: str) -> Any | None:
+class UserRepository:
+    # Nie ma __init__ z sesją
 
-        query = user_table \
-            .select() \
-            .where(user_table.c.email == email)
-        user = await database.fetch_one(query)
+    async def get_user_by_id(self, user_id: UUID) -> User | None:
+        query = user_table.select().where(user_table.c.id_user == user_id)
+        row = await database.fetch_one(query)  # Używa database.fetch_one
+        return User(**row) if row else None
 
-        return user
+    async def get_user_by_email(self, email: str) -> User | None:
+        query = user_table.select().where(user_table.c.email == email)
+        row = await database.fetch_one(query)
+        return User(**row) if row else None
+
+    async def get_user_by_username(self, username: str) -> User | None:
+        query = user_table.select().where(user_table.c.username == username)
+        row = await database.fetch_one(query)
+        return User(**row) if row else None
+
+    async def create_user(self, user_data: dict) -> User:
+        query = user_table.insert().values(**user_data).returning(user_table)
+        created_user_row = await database.fetch_one(query)
+        return User(**created_user_row)

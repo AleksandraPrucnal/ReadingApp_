@@ -1,64 +1,72 @@
+from fastapi import HTTPException, status
 from uuid import UUID
-
+from src.infrastructure.repositories.user_repository import UserRepository
 from src.core.domain.user import UserIn
-from src.core.repositories.iuser_repository import IUserRepository
-from src.infrastructure.dto.userDTO import UserDTO
-from src.infrastructure.dto.tokenDTO import TokenDTO
-from src.infrastructure.services.iuser import IUserService
-from src.infrastructure.utils.password import verify_password
-from src.infrastructure.utils.token import generate_user_token
+from src.infrastructure.dto.userDTO import UserCreate, UserDTO  # Modele API
+from src.core.security import hash_password, verify_password, create_access_token
+from src.core.domain.enums import UserRole as DomainUserRole
 
 
-class UserService(IUserService):
-    """An abstract class for user service."""
+class UserService:
+    def __init__(self, user_repo: UserRepository):
+        self.user_repo = user_repo
 
-    _repository: IUserRepository
+    async def register_user(self, user_create: UserCreate) -> UserDTO:
+        # 1. Sprawdź, czy email lub username już istnieje
+        existing_user_email = await self.user_repo.get_user_by_email(user_create.email)
+        if existing_user_email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already registered",
+            )
+        existing_user_username = await self.user_repo.get_user_by_username(user_create.username)
+        if existing_user_username:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Username already taken",
+            )
 
-    def __init__(self, repository: IUserRepository) -> None:
-        self._repository = repository
+        # 2. Zahaszuj hasło (logika biznesowa)
+        hashed_pwd = hash_password(user_create.password)
 
-    async def register_user(self, user: UserIn) -> UserDTO | None:
+        # 3. Przygotuj dane do zapisu w repozytorium
+        # Tworzymy słownik zamiast obiektu UserIn, aby łatwo podmienić hasło
+        user_data_for_repo = user_create.model_dump()
+        user_data_for_repo["password"] = hashed_pwd
+        # Konwertuj enuma z API na enuma domenowego (tutaj są identyczne, ale to dobra praktyka)
+        user_data_for_repo["role"] = DomainUserRole(user_create.role.value)
 
-        return await self._repository.register_user(user)
+        # 4. Utwórz użytkownika przez repozytorium
+        created_user_domain = await self.user_repo.create_user(user_data_for_repo)
 
-    async def authenticate_user(self, user: UserIn) -> TokenDTO | None:
-        """The method authenticating the user."""
+        # 5. Zwróć DTO
+        return UserDTO.model_validate(created_user_domain)
 
-        if user_data := await self._repository.get_by_email(user.email):
-            if verify_password(user.password, user_data.password):
-                token_details = generate_user_token(
-                    user_data.id_user,
-                    user_data.role.value if hasattr(user_data.role, "value") else user_data.role
-                )
-                return TokenDTO(
-                    access_token=token_details["access_token"],
-                    token_type="Bearer",
-                    expires=token_details["expires"]
-                )
-            return None
+    async def authenticate_user(self, email: str, password: str) -> dict:
+        user = await self.user_repo.get_user_by_email(email)
 
-        return None
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect email or password",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
 
-    async def get_by_uuid(self, uuid: UUID) -> UserDTO | None:
-        """A method getting user by UUID.
+        if not verify_password(password, user.password):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect email or password",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
 
-        Args:
-            uuid (UUID5): The UUID of the user.
+        # Tworzenie tokenu JWT
+        access_token = create_access_token(
+            data={"user_id": str(user.id_user), "username": user.username}
+        )
+        return {"access_token": access_token, "token_type": "bearer"}
 
-        Returns:
-            UserDTO | None: The user data, if found.
-        """
-
-        return await self._repository.get_by_uuid(uuid)
-
-    async def get_by_email(self, email: str) -> UserDTO | None:
-        """A method getting user by email.
-
-        Args:
-            email (str): The email of the user.
-
-        Returns:
-            UserDTO | None: The user data, if found.
-        """
-
-        return await self.get_by_email(email)
+    async def get_user_by_id(self, user_id: UUID) -> UserDTO:
+        user = await self.user_repo.get_user_by_id(user_id)
+        if not user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        return UserDTO.model_validate(user)

@@ -160,11 +160,14 @@ progress_table = Table(
 Index("ix_progress_user_exercise", progress_table.c.user_id, progress_table.c.exercise_id)
 
 
+# --- KONFIGURACJA BAZY DANYCH ---
+# 1. Definicja db_uri MUSI być pierwsza
 db_uri = (
     f"postgresql+asyncpg://{config.DB_USER}:{config.DB_PASSWORD}"
     f"@{config.DB_HOST}/{config.DB_NAME}"
 )
 
+# 2. Silnik (engine) dla `init_db` (SQLAlchemy async)
 engine = create_async_engine(
     db_uri,
     echo=True,
@@ -172,12 +175,14 @@ engine = create_async_engine(
     pool_pre_ping=True,
 )
 
+# 3. Obiekt 'database' dla repozytoriów (biblioteka 'databases')
 database = databases.Database(
     db_uri,
-    force_rollback=True,
+    force_rollback=True, # Ustaw na False w produkcji
 )
 
-
+# --- FUNKCJE INICJALIZACYJNE ---
+# Ta funkcja używa 'engine'
 async def run_sql_file(file_path: str):
     with open(file_path, "r") as file:
         statements = file.read().split(";")
@@ -186,13 +191,14 @@ async def run_sql_file(file_path: str):
             if statement.strip():
                 await conn.execute(text(statement.strip()))
 
-
+# Ta funkcja używa 'engine'
 async def init_db(retries: int = 5, delay: int = 5) -> None:
     for attempt in range(retries):
         try:
             async with engine.begin() as conn:
                 await conn.run_sync(metadata.create_all)
             await run_sql_file("./src/data.sql")
+            print("--- Database initialization successful ---")
             return
         except (
             OperationalError,

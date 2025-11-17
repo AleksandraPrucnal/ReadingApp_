@@ -1,50 +1,60 @@
-from dependency_injector.wiring import inject, Provide
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, status, HTTPException
+from fastapi.security import OAuth2PasswordRequestForm
+from uuid import UUID
 
-from src.container import Container
-from src.core.domain.user import UserIn
-from src.infrastructure.dto.tokenDTO import TokenDTO
-from src.infrastructure.dto.userDTO import UserDTO
-from src.infrastructure.services.iuser import IUserService
+from src.infrastructure.dto.userDTO import UserCreate, UserDTO, Token
+from src.infrastructure.services.user import UserService
+from src.api.dependencies import get_user_service, get_current_user
 
-router = APIRouter(prefix="/user", tags=["user"])
+router = APIRouter(prefix="/auth", tags=["Authentication & Users"])
 
-
-@router.post("/register", response_model=UserDTO, status_code=201)
-@inject
+@router.post("/register", response_model=UserDTO, status_code=status.HTTP_201_CREATED)
 async def register_user(
-    user: UserIn,
-    service: IUserService = Depends(Provide[Container.user_service]),
-) -> dict:
-    """A router coroutine for registering new user
-
-    Args:
-        user (UserIn): The user input data.
-        service (IUserService, optional): The injected user service.
-
-    Returns:
-        dict: The user DTO details.
+    user_in: UserCreate,
+    user_service: UserService = Depends(get_user_service)
+):
     """
+    Rejestruje nowego użytkownika.
+    """
+    return await user_service.register_user(user_in)
 
-    if new_user := await service.register_user(user):
-        return UserDTO(**dict(new_user)).model_dump()
-
-    raise HTTPException(
-        status_code=400,
-        detail="The user with provided e-mail already exists",
+@router.post("/authenticate", response_model=Token)
+async def login_for_access_token(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    user_service: UserService = Depends(get_user_service)
+):
+    """
+    Loguje użytkownika i zwraca token JWT.
+    **Ważne:** Używa `application/x-www-form-urlencoded` (standard OAuth2).
+    'username' w formularzu to email użytkownika.
+    """
+    # Używamy form_data.username jako email
+    token = await user_service.authenticate_user(
+        email=form_data.username,
+        password=form_data.password
     )
+    return token
 
+@router.get("/me", response_model=UserDTO)
+async def read_users_me(
+    current_user: UserDTO = Depends(get_current_user)
+):
+    """
+    Zwraca dane aktualnie zalogowanego użytkownika.
+    """
+    return current_user
 
-@router.post("/token", response_model=TokenDTO, status_code=200)
-@inject
-async def authenticate_user(
-    user: UserIn,
-    service: IUserService = Depends(Provide[Container.user_service]),
-) -> dict:
-    """A router coroutine for authenticating users."""
-    if token_details := await service.authenticate_user(user):
-        return token_details
-    raise HTTPException(
-        status_code=401,
-        detail="Provided incorrect credentials",
-    )
+@router.get("/users/{user_id}", response_model=UserDTO)
+async def read_user_by_id(
+    user_id: UUID,
+    user_service: UserService = Depends(get_user_service),
+    current_user: UserDTO = Depends(get_current_user) # Zabezpieczenie endpointu
+):
+    """
+    Pobiera dane użytkownika po ID.
+    (Obecnie wymaga bycia zalogowanym, aby zobaczyć kogokolwiek).
+    """
+    user = await user_service.get_user_by_id(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user

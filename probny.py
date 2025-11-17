@@ -22,3 +22,15 @@ favourite_names = {
 
 result = inflect_in_text(text, favourite_names)
 print(result)
+
+"""
+CASE_MAP = {
+    "mianownik": "nom",
+    "dopelniacz": "gen", "dopełniacz": "gen",
+    "celownik": "dat",
+    "biernik": "acc",
+    "narzednik": "inst", "narzędnik": "inst",
+    "miejscownik": "loc",
+    "wolacz": "voc", "wołacz": "voc",
+}
+"""
