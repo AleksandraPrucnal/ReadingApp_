@@ -6,11 +6,14 @@ from typing import AsyncGenerator
 from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.exception_handlers import http_exception_handler
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from src.api.routers.exercise import router as exercise_router
-from src.api.routers.user import router as user_router # <-- Zmieniony import
+from src.api.routers.user import router as user_router
 from src.api.routers.topic import router as topic_router
 from src.api.routers.progress import router as progress_router
+from src.api.routers.upload import router as upload_router
+
 from src.config import config
 from src.container import Container
 from src.db import database, init_db
@@ -26,10 +29,12 @@ print(f"User: {config.DB_USER}")
 container = Container()
 container.wire(modules=[
     "src.api.routers.exercise",
-    "src.api.routers.user", # <-- Zmieniony moduł
+    "src.api.routers.user",
     "src.api.routers.topic",
     "src.api.routers.progress",
+    "src.api.routers.upload",  # <-- POPRAWKA 1: Dodano brakujący router
 ])
+
 
 # Usunęliśmy pierwszą, zduplikowaną definicję lifespan
 
@@ -45,6 +50,11 @@ async def lifespan(_: FastAPI) -> AsyncGenerator:
         password=os.getenv("DB_PASSWORD", "postgres"),
         database=os.getenv("DB_NAME", "app"),
     )
+
+    # Tworzymy folder PRZED podłączeniem bazy, na wszelki wypadek
+    logging.info("Creating static directory...")
+    os.makedirs("uploaded_images", exist_ok=True)
+
     logging.info("Database is ready. Initializing tables...")
     await init_db()
     logging.info("Connecting to database pool...")
@@ -57,9 +67,13 @@ async def lifespan(_: FastAPI) -> AsyncGenerator:
     logging.info("Database connection pool closed.")
 
 
+# --- Aplikacja jest definiowana TUTAJ ---
 app = FastAPI(lifespan=lifespan)
 
-# --- Konfiguracja CORS (Poprawiona) ---
+# --- Montowanie plików statycznych (zaraz po definicji 'app') ---
+app.mount("/static", StaticFiles(directory="uploaded_images"), name="static")
+
+# --- Middleware (zaraz po definicji 'app') ---
 origins = [
     "http://localhost",
     "http://localhost:3000",
@@ -68,28 +82,29 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,       # Używamy konkretnych originów
-    allow_credentials=True,    # To jest teraz bezpieczne
+    allow_origins=origins,
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# --- Dołączanie routerów (Poprawione) ---
-# Prefiksy są już zdefiniowane wewnątrz samych plików routerów
+# --- Dołączanie routerów (NA KOŃCU, po definicji 'app') ---
 app.include_router(exercise_router, prefix="/exercise")
-app.include_router(user_router) # <-- Usunięto prefix /user
+app.include_router(user_router)
 app.include_router(progress_router, prefix="/progress")
 app.include_router(topic_router, prefix="/topic")
+app.include_router(upload_router)  # <-- POPRAWKA 2: Przeniesiono router tutaj
 
 
+# --- Reszta (Exception Handlers, itd.) ---
 @app.exception_handler(HTTPException)
 async def http_exception_handle_logging(
-    request: Request,
-    exception: HTTPException,
+        request: Request,
+        exception: HTTPException,
 ) -> Response:
-    # Tutaj możesz dodać logowanie błędu, np.:
     # logging.error(f"HTTP Exception: {exception.status_code} {exception.detail} for {request.url}")
     return await http_exception_handler(request, exception)
+
 
 @app.get("/")
 def read_root():
