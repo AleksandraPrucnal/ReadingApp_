@@ -43,12 +43,12 @@ class ExerciseService(IExerciseService):
         return await self._repository.get_by_type(ex_type, limit=limit, offset=offset)
 
     async def get_by_topics(
-        self,
-        topic_ids: Sequence[int],
-        *,
-        match_all: bool = False,
-        limit: int = 50,
-        offset: int = 0,
+            self,
+            topic_ids: Sequence[int],
+            *,
+            match_all: bool = False,
+            limit: int = 50,
+            offset: int = 0,
     ) -> Iterable[ExerciseBaseDTO]:
         return await self._repository.get_by_topics(
             topic_ids,
@@ -90,6 +90,8 @@ class ExerciseService(IExerciseService):
     async def delete_question(self, id_question: int) -> bool:
         return await self._repository.delete_question(id_question)
 
+    # --- PUNKTY I SPRAWDZANIE ---
+
     async def check_answer_match(
             self,
             id_exercise: int,
@@ -101,13 +103,16 @@ class ExerciseService(IExerciseService):
             id_exercise=id_exercise,
             selected_index=selected_index,
         )
-        # zapis postępu jeśli wiemy, kto odpowiadał
+
+        # Zapis postępu
         if user_id is not None:
+            points = 10 if ok else -5
+
             await self._progress_repo.add_progress(
                 ProgressIn(
                     user_id=user_id,
                     id_exercise=ex_id,
-                    rate=100 if ok else 0,
+                    rate=points,
                     completed_at=datetime.utcnow(),
                 )
             )
@@ -126,31 +131,16 @@ class ExerciseService(IExerciseService):
             id_question=id_question,
             selected_index=selected_index,
         )
+
         if user_id is not None:
+            points = 5 if ok else -2
+
             await self._progress_repo.add_progress(
                 ProgressIn(
                     user_id=user_id,
                     id_exercise=ex_id,
-                    rate=100 if ok else 0,
+                    rate=points,
                     completed_at=datetime.utcnow(),
                 )
             )
         return ex_id, q_id, ok
-
-"""
-    # --- Checking answers ---
-    async def check_answer_match(self, id_exercise: int, selected_index: int) -> tuple[int, bool]:
-        return await self._repository.check_answer_match(id_exercise=id_exercise, selected_index=selected_index)
-
-    async def check_answer_question_single(
-        self,
-        id_exercise: int,
-        id_question: int,
-        selected_index: int,
-    ) -> tuple[int, int, bool]:
-        return await self._repository.check_answer_question_single(
-            id_exercise=id_exercise,
-            id_question=id_question,
-            selected_index=selected_index,
-        )
-"""

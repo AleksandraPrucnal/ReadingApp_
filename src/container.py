@@ -33,7 +33,7 @@ class Container(DeclarativeContainer):
     # UserService
     user_service = Factory(
         UserService,
-        user_repo=user_repository,  # Upewnij się, że ta nazwa pasuje do __init__ w UserService
+        user_repo=user_repository,
     )
 
     # TopicService
