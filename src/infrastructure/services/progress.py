@@ -12,17 +12,11 @@ class ProgressService:
         Logika levelowania 1-5.
         Zwraca: (obecny_level, próg_następnego, ile_brakuje)
         """
-        # Progi punktowe (możesz zmienić te liczby)
-        # Level 1: 0-100
-        # Level 2: 101-300
-        # Level 3: 301-600
-        # Level 4: 601-1000
-        # Level 5: 1000+
         levels = {
-            1: 100,
-            2: 300,
-            3: 600,
-            4: 1000,
+            1: 50,
+            2: 100,
+            3: 220,
+            4: 350,
             5: 999999  # Max level
         }
 
@@ -31,7 +25,6 @@ class ProgressService:
 
         for lvl, threshold in levels.items():
             if total_points >= threshold:
-                # Jeśli mamy więcej punktów niż próg, wchodzimy na wyższy level (do max 5)
                 if lvl < 5:
                     current_level = lvl + 1
                     next_threshold = levels[lvl + 1]
@@ -39,13 +32,8 @@ class ProgressService:
                     current_level = 5
                     next_threshold = total_points  # Już nie rośnie
             else:
-                # Nie osiągnęliśmy progu tego levelu, więc zostajemy na poprzednim (lub 1)
-                # Pętla logiczna tutaj zapewnia poprawne wyliczenie
                 break
 
-        # Fix logiczny dla prostych progów:
-        # Jeśli total=50 (lvl 1), next=100.
-        # Jeśli total=150 (lvl 2), next=300.
         if total_points < levels[1]:
             current_level = 1
             next_threshold = levels[1]
