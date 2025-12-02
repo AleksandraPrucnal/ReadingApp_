@@ -34,11 +34,10 @@ from sqlalchemy.dialects.postgresql import ENUM, ARRAY
 metadata = sqlalchemy.MetaData()
 
 
-exercise_type_enum = ENUM(
+exercise_type_enum = SAEnum(
     ExerciseType,
     name="exercise_type_enum",
-    create_type=True,
-    native_enum=True,
+    values_callable=lambda enum_cls: [m.value for m in enum_cls],
 )
 
 ui_mode_enum = ENUM(
@@ -112,7 +111,7 @@ exercise_table = Table(
     Column("id_exercise", Integer, primary_key=True, autoincrement=True),
     Column("type", exercise_type_enum, nullable=False),
     Column("level", Integer, nullable=False, index=True),
-    Column("topics", ARRAY(Integer), nullable=False, server_default="{}"),  # <-- NOWE
+    Column("topics", ARRAY(Integer), nullable=False, server_default="{}"),
     Column("created_at", DateTime(timezone=True), nullable=False, server_default=func.now()),
 )
 

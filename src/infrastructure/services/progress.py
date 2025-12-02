@@ -13,10 +13,10 @@ class ProgressService:
         Zwraca: (obecny_level, próg_następnego, ile_brakuje)
         """
         levels = {
-            1: 50,
+            1: 500,
             2: 100,
-            3: 220,
-            4: 350,
+            3: 150,
+            4: 250,
             5: 999999  # Max level
         }
 

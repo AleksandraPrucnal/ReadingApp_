@@ -106,7 +106,7 @@ class ExerciseService(IExerciseService):
 
         # Zapis postępu
         if user_id is not None:
-            points = 10 if ok else -5
+            points = 10 if ok else 0
 
             await self._progress_repo.add_progress(
                 ProgressIn(
@@ -133,7 +133,7 @@ class ExerciseService(IExerciseService):
         )
 
         if user_id is not None:
-            points = 5 if ok else -2
+            points = 5 if ok else 0
 
             await self._progress_repo.add_progress(
                 ProgressIn(
