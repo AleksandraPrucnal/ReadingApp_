@@ -1,23 +1,26 @@
-# Dockerfile
-
-FROM python:3.12.7-alpine3.20
+FROM python:3.12-slim
 
 ENV PYTHONUNBUFFERED 1
 
-RUN apk add --update --no-cache postgresql-client
-RUN apk add --update --no-cache --virtual .tmp-build-deps gcc libc-dev linux-headers postgresql-dev musl-dev zlib zlib-dev
+RUN apt-get update && apt-get install -y \
+    postgresql-client \
+    build-essential \
+    libpq-dev \
+    swig \
+    zlib1g-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY ./requirements.txt /requirements.txt
 RUN pip install -r /requirements.txt
 
-RUN apk del .tmp-build-deps
+RUN apt-get remove -y build-essential swig && apt-get autoremove -y
 
 RUN mkdir /app
 COPY ./src /app/src
 
 COPY ./src/data.sql /app/src/data.sql
 
-RUN adduser -D user
+RUN useradd -m user
 USER user
 
 WORKDIR /app
