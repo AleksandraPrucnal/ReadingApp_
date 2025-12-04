@@ -18,6 +18,8 @@ from src.core.domain.exercises.exercise_question import ExerciseQuestionIn
 from src.core.domain.exercises.question import QuestionIn
 from src.infrastructure.services.iexercise import IExerciseService
 
+from src.infrastructure.services.inflection_service import InflectionService
+
 # === POPRAWIONY IMPORT ===
 # Teraz importujemy z 'src.api.dependencies', gdzie jest nasza działająca funkcja z debugowaniem
 from src.api.dependencies import get_current_user, CurrentUser
