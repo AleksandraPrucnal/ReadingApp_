@@ -2,7 +2,7 @@
 
 from typing import Iterable, Sequence
 from dependency_injector.wiring import inject, Provide
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
 
 from src.container import Container
@@ -87,8 +87,8 @@ def _prepare_user_names(user: CurrentUser) -> dict:
     """
     # TODO: Docelowo te dane (dziadek, babcia) powinny pochodzić z bazy danych (np. user.preferences)
     return {
-        "child_name": getattr(user, "first_name", "Dziecko"),
-        "grandfather": "Dziadek",
+        "child_name": getattr(user, "first_name", "Ola"),
+        "grandfather": "Dziadek Paweł",
         "grandmother": "Babcia",
     }
 
