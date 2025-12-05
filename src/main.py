@@ -12,6 +12,7 @@ from src.api.routers.exercise import router as exercise_router
 from src.api.routers.user import router as user_router
 from src.api.routers.topic import router as topic_router
 from src.api.routers.progress import router as progress_router
+from src.api.routers.inflection import router as inflection_router
 from src.api.routers.upload import router as upload_router
 
 from src.config import config
@@ -32,7 +33,8 @@ container.wire(modules=[
     "src.api.routers.user",
     "src.api.routers.topic",
     "src.api.routers.progress",
-    "src.api.routers.upload",  # <-- POPRAWKA 1: Dodano brakujący router
+    "src.api.routers.inflection",
+    "src.api.routers.upload",
 ])
 
 
@@ -88,12 +90,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- Dołączanie routerów (NA KOŃCU, po definicji 'app') ---
+
 app.include_router(exercise_router, prefix="/exercise")
 app.include_router(user_router)
 app.include_router(progress_router, prefix="/progress")
 app.include_router(topic_router, prefix="/topic")
-app.include_router(upload_router)  # <-- POPRAWKA 2: Przeniesiono router tutaj
+app.include_router(inflection_router)
+app.include_router(upload_router)
 
 
 # --- Reszta (Exception Handlers, itd.) ---

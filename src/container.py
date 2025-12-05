@@ -12,6 +12,7 @@ from src.infrastructure.services.exercise import ExerciseService
 from src.infrastructure.services.topic import TopicService
 from src.infrastructure.services.user import UserService
 from src.infrastructure.services.progress import ProgressService
+from src.infrastructure.services.inflection import InflectionService
 
 
 class Container(DeclarativeContainer):
@@ -46,4 +47,8 @@ class Container(DeclarativeContainer):
     progress_service = Factory(
         ProgressService,
         repository=progress_repository
+    )
+
+    inflection_service = Factory(
+        InflectionService,
     )

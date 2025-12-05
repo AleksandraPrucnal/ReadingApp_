@@ -2,7 +2,7 @@
 
 from typing import Iterable, Sequence
 from dependency_injector.wiring import inject, Provide
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
 from src.container import Container
@@ -18,12 +18,13 @@ from src.core.domain.exercises.exercise_question import ExerciseQuestionIn
 from src.core.domain.exercises.question import QuestionIn
 from src.infrastructure.services.iexercise import IExerciseService
 
-from src.infrastructure.services.inflection_service import InflectionService
-
+# === POPRAWIONY IMPORT ===
+# Teraz importujemy z 'src.api.dependencies', gdzie jest nasza działająca funkcja z debugowaniem
 from src.api.dependencies import get_current_user, CurrentUser
 
 router = APIRouter(prefix="/exercises", tags=["exercises"])
 
+# --------------------------- Answer checking (WYMAGA LOGOWANIA) -----------------------------------
 
 class MatchAnswerIn(BaseModel):
     id_exercise: int
@@ -75,49 +76,11 @@ async def check_question_answer(
         id_exercise=body.id_exercise,
         id_question=body.id_question,
         selected_index=body.selected_index,
-        user_id=user.id_user,
+        user_id=user.id_user, # Przekazujemy ID zalogowanego użytkownika
     )
     return QuestionAnswerOut(id_exercise=ex_id, id_question=q_id, is_correct=ok)
 
-
-def _prepare_user_names(user: CurrentUser) -> dict:
-    """
-    Funkcja pomocnicza do mapowania danych użytkownika na słownik imion
-    potrzebny do serwisu odmiany (InflectionService).
-    """
-    # TODO: Docelowo te dane (dziadek, babcia) powinny pochodzić z bazy danych (np. user.preferences)
-    return {
-        "child_name": getattr(user, "first_name", "Ola"),
-        "grandfather": "Dziadek Paweł",
-        "grandmother": "Babcia",
-    }
-
-
-@router.get("/{id_exercise}", response_model=ExerciseBaseDTO, status_code=status.HTTP_200_OK)
-@inject
-async def get_exercise_by_id(
-        id_exercise: int,
-        service: IExerciseService = Depends(Provide[Container.exercise_service]),
-        user: CurrentUser = Depends(get_current_user),
-) -> ExerciseBaseDTO:
-    """
-    Pobiera ćwiczenie po ID i personalizuje jego treść (imiona) pod konkretnego użytkownika.
-    """
-    exercise = await service.get_by_id(id_exercise)
-    if not exercise:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Exercise not found"
-        )
-
-    user_names = _prepare_user_names(user)
-    inflector = InflectionService()
-    if hasattr(exercise, 'text') and exercise.text:
-        personalized_text = inflector.personalize_text(exercise.text, user_names)
-        exercise.text = personalized_text
-
-    return exercise
-
+# --------------------------- Read endpoints (PUBLICZNE) ------------------------------------
 
 @router.get("/all", response_model=Iterable[ExerciseBaseDTO], status_code=200)
 @inject
@@ -127,6 +90,18 @@ async def get_all_exercises(
     service: IExerciseService = Depends(Provide[Container.exercise_service]),
 ) -> Iterable[ExerciseBaseDTO]:
     return await service.get_all_exercises(limit=limit, offset=offset)
+
+
+@router.get("/{id_exercise}", response_model=ExerciseBaseDTO, status_code=200)
+@inject
+async def get_exercise_by_id(
+    id_exercise: int,
+    service: IExerciseService = Depends(Provide[Container.exercise_service]),
+) -> ExerciseBaseDTO:
+    ex = await service.get_by_id(id_exercise)
+    if not ex:
+        raise HTTPException(status_code=404, detail="Exercise not found")
+    return ex
 
 
 @router.get("/type/{ex_type}", response_model=Iterable[ExerciseBaseDTO], status_code=200)

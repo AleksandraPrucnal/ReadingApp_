@@ -26,10 +26,10 @@ print(result)
 """
 CASE_MAP = {
     "mianownik": "nom",
-    "dopelniacz": "gen", "dopełniacz": "gen",
+    "dopelniacz": "gen",
     "celownik": "dat",
     "biernik": "acc",
-    "narzednik": "inst", "narzędnik": "inst",
+    "narzednik": "inst",
     "miejscownik": "loc",
     "wolacz": "voc", "wołacz": "voc",
 }
