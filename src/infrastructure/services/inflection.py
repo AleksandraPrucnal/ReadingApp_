@@ -41,7 +41,7 @@ class InflectionService:
         if not text:
             return ""
 
-        # np. {child_name:inst} lub {grandfather:narzędnik}
+        # Szuka struktur typu {child_name:inst}
         pattern = r"\{(\w+):(\w+)\}"
 
         def replacer(match):

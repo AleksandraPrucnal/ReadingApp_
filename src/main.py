@@ -14,6 +14,7 @@ from src.api.routers.topic import router as topic_router
 from src.api.routers.progress import router as progress_router
 from src.api.routers.inflection import router as inflection_router
 from src.api.routers.upload import router as upload_router
+from src.api.routers.preferences import router as preferences_router
 
 from src.config import config
 from src.container import Container
@@ -35,6 +36,7 @@ container.wire(modules=[
     "src.api.routers.progress",
     "src.api.routers.inflection",
     "src.api.routers.upload",
+    "src.api.routers.preferences",
 ])
 
 
@@ -69,13 +71,10 @@ async def lifespan(_: FastAPI) -> AsyncGenerator:
     logging.info("Database connection pool closed.")
 
 
-# --- Aplikacja jest definiowana TUTAJ ---
 app = FastAPI(lifespan=lifespan)
 
-# --- Montowanie plików statycznych (zaraz po definicji 'app') ---
 app.mount("/static", StaticFiles(directory="uploaded_images"), name="static")
 
-# --- Middleware (zaraz po definicji 'app') ---
 origins = [
     "http://localhost",
     "http://localhost:3000",
@@ -97,6 +96,7 @@ app.include_router(progress_router, prefix="/progress")
 app.include_router(topic_router, prefix="/topic")
 app.include_router(inflection_router)
 app.include_router(upload_router)
+app.include_router(preferences_router)
 
 
 # --- Reszta (Exception Handlers, itd.) ---

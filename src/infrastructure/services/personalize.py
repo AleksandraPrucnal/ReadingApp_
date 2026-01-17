@@ -1,3 +1,6 @@
+"""Roboczy kod, sprawdzam jak działa morfeusz2"""
+
+
 import re
 import morfeusz2
 

@@ -18,13 +18,10 @@ from src.core.domain.exercises.exercise_question import ExerciseQuestionIn
 from src.core.domain.exercises.question import QuestionIn
 from src.infrastructure.services.iexercise import IExerciseService
 
-# === POPRAWIONY IMPORT ===
-# Teraz importujemy z 'src.api.dependencies', gdzie jest nasza działająca funkcja z debugowaniem
+
 from src.api.dependencies import get_current_user, CurrentUser
 
 router = APIRouter(prefix="/exercises", tags=["exercises"])
-
-# --------------------------- Answer checking (WYMAGA LOGOWANIA) -----------------------------------
 
 class MatchAnswerIn(BaseModel):
     id_exercise: int
@@ -41,13 +38,12 @@ class MatchAnswerOut(BaseModel):
 async def check_match_answer(
     body: MatchAnswerIn,
     service: IExerciseService = Depends(Provide[Container.exercise_service]),
-    # Dodano zależność od użytkownika -> WYMUSZA LOGOWANIE I PRZEKAZUJE ID
     user: CurrentUser = Depends(get_current_user),
 ) -> MatchAnswerOut:
     ex_id, ok = await service.check_answer_match(
         id_exercise=body.id_exercise,
         selected_index=body.selected_index,
-        user_id=user.id_user, # Przekazujemy ID zalogowanego użytkownika
+        user_id=user.id_user,
     )
     return MatchAnswerOut(id_exercise=ex_id, is_correct=ok)
 
@@ -69,18 +65,16 @@ class QuestionAnswerOut(BaseModel):
 async def check_question_answer(
     body: QuestionAnswerIn,
     service: IExerciseService = Depends(Provide[Container.exercise_service]),
-    # Dodano zależność od użytkownika -> WYMUSZA LOGOWANIE I PRZEKAZUJE ID
     user: CurrentUser = Depends(get_current_user),
 ) -> QuestionAnswerOut:
     ex_id, q_id, ok = await service.check_answer_question_single(
         id_exercise=body.id_exercise,
         id_question=body.id_question,
         selected_index=body.selected_index,
-        user_id=user.id_user, # Przekazujemy ID zalogowanego użytkownika
+        user_id=user.id_user,
     )
     return QuestionAnswerOut(id_exercise=ex_id, id_question=q_id, is_correct=ok)
 
-# --------------------------- Read endpoints (PUBLICZNE) ------------------------------------
 
 @router.get("/all", response_model=Iterable[ExerciseBaseDTO], status_code=200)
 @inject
@@ -138,7 +132,7 @@ async def get_exercises_by_topics(
     return await service.get_by_topics(topic_ids, match_all=match_all, limit=limit, offset=offset)
 
 
-# --------------------------- Questions read (PUBLICZNE) ------------------------------------
+
 
 @router.get("/{id_exercise}/questions", response_model=Iterable[QuestionDTO], status_code=200)
 @inject
@@ -158,7 +152,6 @@ async def get_question(
     return await service.get_question(id_question)
 
 
-# --------------------------- Create endpoints (PUBLICZNE) ----------------------------------
 
 @router.post("/match", response_model=ExerciseMatchDTO, status_code=201)
 @inject
@@ -197,7 +190,6 @@ async def add_question_to_exercise(
     return q
 
 
-# --------------------------- Update endpoints (PUBLICZNE) ----------------------------------
 
 @router.put("/match/{id_exercise}", response_model=ExerciseMatchDTO, status_code=200)
 @inject
@@ -238,7 +230,6 @@ async def update_question_item(
     return q
 
 
-# --------------------------- Delete endpoints (PUBLICZNE) ----------------------------------
 
 @router.delete("/{id_exercise}", status_code=204)
 @inject
