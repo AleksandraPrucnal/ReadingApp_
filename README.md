@@ -29,7 +29,7 @@ Projekt realizowany był zgodnie z podejściem **API-First / Backend-First**, co
 1.  **Domain & Data Modeling:** Prace rozpoczęto od zaprojektowania modeli domenowych oraz struktury bazy danych.
 2.  **Backend Implementation:** Implementacja logiki biznesowej oraz wystawienie endpointów REST API.
 3.  **Parallel UI/UX Design:** Równolegle do prac backendowych trwało projektowanie interfejsów i makiety aplikacji mobilnej. (portfolio z projektem: bit.ly/portfolio-prucnal)
-4.  **Mobile Integration:** Finalnym etapem była implementacja warstwy wizualnej we Flutterze i integracja z przygotowanym wcześniej, przetestowanym API. (frontend: 
+4.  **Mobile Integration:** Finalnym etapem była implementacja warstwy wizualnej we Flutterze i integracja z przygotowanym wcześniej, przetestowanym API. (frontend: https://github.com/AleksandraPrucnal/frontend_ReadingApp)
 
 ## Architektura
 
