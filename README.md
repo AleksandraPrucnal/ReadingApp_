@@ -1,6 +1,6 @@
-# Backend API - Personalized Reading Comprehension App for Children
+# Backend API
 
-## O projekcie (About)
+## O projekcie
 
 Backend dla innowacyjnej aplikacji mobilnej wspierającej naukę czytania ze zrozumieniem u dzieci. System rozwiązuje problem braku zaangażowania uczniów poprzez **personalizację treści w czasie rzeczywistym**.
 
@@ -14,15 +14,15 @@ Kluczową funkcjonalnością jest implementacja mechanizmu personalizacji oparte
 * **Ćwiczenia:** Dwa typy ćwiczeń- dopasuj obrazek i quiz.
 * **Progres:** Śledzenie postępów i zapisywanie wyników.
 
-## 🛠 Tech Stack
+## Tech Stack
 
-* **Core:** Python 3.10+, FastAPI
-* **Database:** PostgreSQL, SQLAlchemy (Async ORM), Alembic (Migracje)
+* **Core:** Python, FastAPI, Pydantic
+* **Database:** PostgreSQL, SQLAlchemy
 * **NLP:** Morfeusz2
 * **Architecture:** Onion Architecture
 * **DevOps:** Docker, Docker Compose
 
-## Proces tworzenia (Development Workflow)
+## Proces tworzenia
 
 Projekt realizowany był zgodnie z podejściem **API-First / Backend-First**, co pozwoliło na stabilny rozwój systemu:
 
