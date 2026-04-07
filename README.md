@@ -75,4 +75,4 @@ src/
 ```
 ![Model bazy danych](model_bazy_danych.png)
 ![Przypadki użycia](diagram_przypadkow_uzycia.png)
-![Diagram czynności](diagram_czynności.png)
+![Diagram czynności](diagram_czynnosci.png)
