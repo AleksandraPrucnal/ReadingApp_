@@ -72,3 +72,8 @@ src/
 |-- db.py                       # Schematy i połączenie z bazą danych
 |-- main.py                     # Punkt startowy aplikacji
 |-- data.sql                    # Zainicjalizowane obiekty początkowe w bazie danych
+
+
+![Model bazy danych](model_bazy_danych.png)
+![Przypadki użycia](diagram_przypadkow_uzycia.png)
+![Diagram czynności](diagram_czynności.png)
